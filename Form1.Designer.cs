@@ -2,24 +2,16 @@
 {
     partial class Form1
     {
-        private System.ComponentModel.IContainer components = null;
         private System.Windows.Forms.Button btnSelectFolder;
         private System.Windows.Forms.Label lblStatus;
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
+        // Initialize UI components
         private void InitializeComponent()
         {
             this.btnSelectFolder = new System.Windows.Forms.Button();
             this.lblStatus = new System.Windows.Forms.Label();
             this.SuspendLayout();
+
             //
             // btnSelectFolder
             //
@@ -30,6 +22,7 @@
             this.btnSelectFolder.Text = "Select Folder";
             this.btnSelectFolder.UseVisualStyleBackColor = true;
             this.btnSelectFolder.Click += new System.EventHandler(this.btnSelectFolder_Click);
+
             //
             // lblStatus
             //
@@ -39,12 +32,13 @@
             this.lblStatus.Size = new System.Drawing.Size(82, 13);
             this.lblStatus.TabIndex = 1;
             this.lblStatus.Text = "Status: Idle";
+
             //
             // Form1
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 100);
+            this.ClientSize = new System.Drawing.Size(450, 100);
             this.Controls.Add(this.lblStatus);
             this.Controls.Add(this.btnSelectFolder);
             this.Name = "Form1";

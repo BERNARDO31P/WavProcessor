@@ -8,6 +8,11 @@ namespace WavProcessor
 {
     public partial class Form1 : Form
     {
+        private readonly FolderBrowserDialog folderBrowser = new FolderBrowserDialog();
+
+        private static readonly byte[] PCMAudioFormat = { 0x01, 0x00 };
+
+
         public Form1()
         {
             InitializeComponent();
@@ -15,14 +20,18 @@ namespace WavProcessor
 
         private async void btnSelectFolder_Click(object sender, EventArgs e)
         {
-            using (var folderBrowser = new FolderBrowserDialog())
+            if (this.folderBrowser.ShowDialog() == DialogResult.OK)
             {
-                if (folderBrowser.ShowDialog() == DialogResult.OK)
+                UpdateStatus("Status: Processing...");
+                try
                 {
-                    string selectedPath = folderBrowser.SelectedPath;
-                    UpdateStatus("Status: Processing...");
-                    await Task.Run(() => ProcessWavFiles(selectedPath));
+                    await Task.Run(() => ProcessWavFiles(folderBrowser.SelectedPath));
                     UpdateStatus("Status: Completed!");
+                }
+                catch (Exception ex)
+                {
+                    UpdateStatus("Status: Error");
+                    MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -45,27 +54,43 @@ namespace WavProcessor
 
             foreach (var file in wavFiles)
             {
-                UpdateStatus($"Status: Processing: {file}");
+                UpdateStatus($"Status: Processing: {Path.GetFileName(file)}");
                 ProcessWavFile(file);
             }
         }
 
         private void ProcessWavFile(string filePath)
         {
-            byte[] data = File.ReadAllBytes(filePath);
-            int fmtChunkOffset = IndexOf(data, new byte[] { (byte)'f', (byte)'m', (byte)'t', (byte)' ' });
-            if (fmtChunkOffset != -1)
-            {
-                int audioFormatOffset = fmtChunkOffset + 8;
-                ushort audioFormat = BitConverter.ToUInt16(data, audioFormatOffset);
-                if (audioFormat == 0xfffe)
-                {
-                    byte[] newAudioFormat = BitConverter.GetBytes((ushort)1);
-                    Array.Copy(newAudioFormat, 0, data, audioFormatOffset, newAudioFormat.Length);
-                }
-            }
+            byte[]? data = null;
 
-            File.WriteAllBytes(filePath, data);
+            try
+            {
+                data = File.ReadAllBytes(filePath);
+                int fmtChunkOffset = IndexOf(data, new byte[] { (byte)'f', (byte)'m', (byte)'t', (byte)' ' });
+
+                if (fmtChunkOffset != -1)
+                {
+                    int audioFormatOffset = fmtChunkOffset + 8;
+                    ushort audioFormat = BitConverter.ToUInt16(data, audioFormatOffset);
+                    if (audioFormat == 0xfffe)
+                    {
+                        Array.Copy(PCMAudioFormat, 0, data, audioFormatOffset, PCMAudioFormat.Length);
+                    }
+                }
+
+                File.WriteAllBytes(filePath, data);
+            }
+            finally
+            {
+                if (data != null)
+                {
+                    Array.Clear(data, 0, data.Length);
+                    data = null;
+                }
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
         }
 
         private int IndexOf(byte[] array, byte[] pattern)
@@ -73,10 +98,9 @@ namespace WavProcessor
             int maxFirstCharSlot = array.Length - pattern.Length + 1;
             for (int i = 0; i < maxFirstCharSlot; i++)
             {
-                if (array[i] != pattern[0]) // Compare only first byte
+                if (array[i] != pattern[0])
                     continue;
 
-                // Found a match on first byte, now try to match rest of the pattern
                 for (int j = pattern.Length - 1; j >= 1; j--)
                 {
                     if (array[i + j] != pattern[j])
