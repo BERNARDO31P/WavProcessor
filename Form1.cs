@@ -20,10 +20,22 @@ namespace WavProcessor
                 if (folderBrowser.ShowDialog() == DialogResult.OK)
                 {
                     string selectedPath = folderBrowser.SelectedPath;
-                    lblStatus.Text = "Status: Processing...";
+                    UpdateStatus("Status: Processing...");
                     await Task.Run(() => ProcessWavFiles(selectedPath));
-                    lblStatus.Text = "Status: Completed!";
+                    UpdateStatus("Status: Completed!");
                 }
+            }
+        }
+
+        private void UpdateStatus(string message)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<string>(UpdateStatus), message);
+            }
+            else
+            {
+                lblStatus.Text = message;
             }
         }
 
@@ -33,7 +45,7 @@ namespace WavProcessor
 
             foreach (var file in wavFiles)
             {
-                lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Status: Processing: " + file));
+                UpdateStatus($"Status: Processing: {file}");
                 ProcessWavFile(file);
             }
         }
