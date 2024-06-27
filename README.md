@@ -5,11 +5,6 @@ This application processes WAV files to correct this header, ensuring compatibil
 
 The bitrate and the sample rate aren't touched at all. You'll be able to play the full audio quality without ANY loss!
 
-## Requirements
-
-- Windows operating system
-- .NET Framework
-
 ## How to Use
 
 It's recommended to backup your songs as I'm still testing. 
