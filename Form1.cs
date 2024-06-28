@@ -50,7 +50,7 @@ namespace WavProcessor
 
         private void ProcessWavFiles(string folderPath)
         {
-            var wavFiles = Directory.GetFiles(folderPath, "*.wav", SearchOption.AllDirectories).OrderBy(f => Guid.NewGuid()).ToArray();
+            var wavFiles = Directory.GetFiles(folderPath, "*.wav", SearchOption.AllDirectories);
 
             foreach (var file in wavFiles)
             {
