@@ -9,7 +9,7 @@ The bitrate and the sample rate aren't touched at all. You'll be able to play th
 
 It's recommended to backup your songs as I'm still testing. 
 
-1. **Download and Run**: Download the executable from the [Releases](https://github.com/BERNARDO31P/WavProcessor/releases/tag/1.0.1) page and run it.
+1. **Download and Run**: Download the executable from the [Releases](https://github.com/BERNARDO31P/WavProcessor/releases/tag/1.0.2) page and run it.
 2. **Select Folder**: Click the "Select Folder" button and choose the directory containing your WAV files.
 3. **Processing**: The application will process all WAV files in the selected directory and its subdirectories.
 4. **Completion**: Once processing is complete, a status message will indicate that the task is finished.
