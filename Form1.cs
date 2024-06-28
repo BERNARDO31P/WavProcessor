@@ -75,10 +75,9 @@ namespace WavProcessor
                     if (audioFormat == 0xfffe)
                     {
                         Array.Copy(PCMAudioFormat, 0, data, audioFormatOffset, PCMAudioFormat.Length);
+                        File.WriteAllBytes(filePath, data);
                     }
                 }
-
-                File.WriteAllBytes(filePath, data);
             }
             finally
             {
