@@ -8,10 +8,9 @@ namespace WavProcessor
 {
     public partial class Form1 : Form
     {
-        private readonly FolderBrowserDialog folderBrowser = new FolderBrowserDialog();
+        private static readonly FolderBrowserDialog folderBrowser = new FolderBrowserDialog();
 
         private static readonly byte[] PCMAudioFormat = { 0x01, 0x00 };
-
 
         public Form1()
         {
@@ -20,20 +19,24 @@ namespace WavProcessor
 
         private async void btnSelectFolder_Click(object sender, EventArgs e)
         {
-            if (this.folderBrowser.ShowDialog() == DialogResult.OK)
+            if (folderBrowser.ShowDialog() != DialogResult.OK) return;
+            UpdateStatus("Processing…");
+
+            var files = Directory.GetFiles(folderBrowser.SelectedPath, "*.wav", SearchOption.AllDirectories);
+
+            // limit concurrent I/O so you don’t swamp the disk
+            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+            await Task.Run(() =>
             {
-                UpdateStatus("Status: Processing...");
-                try
+                Parallel.ForEach(files, options, file =>
                 {
-                    await Task.Run(() => ProcessWavFiles(folderBrowser.SelectedPath));
-                    UpdateStatus("Status: Completed!");
-                }
-                catch (Exception ex)
-                {
-                    UpdateStatus("Status: Error");
-                    MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
+                    ProcessWavFile(file);
+                    Invoke(new Action(() =>
+                        lblStatus.Text = $"Processed: {Path.GetFileName(file)}"));
+                });
+            });
+
+            UpdateStatus("Done");
         }
 
         private void UpdateStatus(string message)
@@ -54,41 +57,48 @@ namespace WavProcessor
 
             foreach (var file in wavFiles)
             {
-                UpdateStatus($"Status: Processing: {Path.GetFileName(file)}");
+                UpdateStatus($"Processing: {Path.GetFileName(file)}");
                 ProcessWavFile(file);
             }
         }
 
         private void ProcessWavFile(string filePath)
         {
-            byte[]? data = null;
-
-            try
+            const ushort Pcma = 0x0001;
+            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite))
+            using (var br = new BinaryReader(fs, System.Text.Encoding.UTF8, leaveOpen: true))
+            using (var bw = new BinaryWriter(fs, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                data = File.ReadAllBytes(filePath);
-                int fmtChunkOffset = IndexOf(data, new byte[] { (byte)'f', (byte)'m', (byte)'t', (byte)' ' });
+                // 1) skip RIFF header
+                br.ReadBytes(4);             // "RIFF"
+                br.ReadUInt32();             // file size
+                br.ReadBytes(4);             // "WAVE"
 
-                if (fmtChunkOffset != -1)
+                // 2) walk chunks until "fmt "
+                while (fs.Position < fs.Length)
                 {
-                    int audioFormatOffset = fmtChunkOffset + 8;
-                    ushort audioFormat = BitConverter.ToUInt16(data, audioFormatOffset);
-                    if (audioFormat == 0xfffe)
+                    var chunkId = new string(br.ReadChars(4));
+                    var chunkSize = br.ReadUInt32();
+                    long dataStart = fs.Position;
+
+                    if (chunkId == "fmt ")
                     {
-                        Array.Copy(PCMAudioFormat, 0, data, audioFormatOffset, PCMAudioFormat.Length);
-                        File.WriteAllBytes(filePath, data);
+                        // read format code
+                        ushort format = br.ReadUInt16();
+                        if (format == 0xFFFE)
+                        {
+                            // seek back 2 bytes and overwrite
+                            fs.Position = dataStart;
+                            bw.Write(Pcma);
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        // skip to next chunk
+                        fs.Position = dataStart + chunkSize;
                     }
                 }
-            }
-            finally
-            {
-                if (data != null)
-                {
-                    Array.Clear(data, 0, data.Length);
-                    data = null;
-                }
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
             }
         }
 
