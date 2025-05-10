@@ -13,7 +13,7 @@ The bitrate and the sample rate aren't touched at all. You'll be able to play th
 4. **Completion**: Once processing is complete, a status message will indicate that the task is finished.
 
 ### Direct downloads
-- [Windows](https://github.com/BERNARDO31P/WavProcessor/releases/download/1.0.2/WavProcessor-Portable-x64.exe)
+- [Windows](https://github.com/BERNARDO31P/WavProcessor/releases/download/1.0.3/WavProcessor-Portable-x64.exe)
 - [MacOS](https://github.com/BERNARDO31P/WavProcessor/releases/download/1.0.2/WavProcessor-Avalonia-Portable-x64.exe) [with Wine](https://www.winehq.org/)
 
 And if none of the above work, here's a Terminal version of the program: 
