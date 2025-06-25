@@ -1,2 +1,2 @@
 @echo off
-dotnet run --project C:\Users\BERNARDO\CLionProjects\WavProcessor\WavProcessor.csproj
+dotnet run --project WavProcessor.csproj
