@@ -10,7 +10,7 @@ namespace WavProcessor
     {
         private static readonly FolderBrowserDialog folderBrowser = new FolderBrowserDialog();
 
-        private static readonly byte[] PCMAudioFormat = { 0x01, 0x00 };
+        private static readonly ushort Pcma = 0x0001;
 
         public Form1()
         {
@@ -51,20 +51,8 @@ namespace WavProcessor
             }
         }
 
-        private void ProcessWavFiles(string folderPath)
-        {
-            var wavFiles = Directory.GetFiles(folderPath, "*.wav", SearchOption.AllDirectories);
-
-            foreach (var file in wavFiles)
-            {
-                UpdateStatus($"Processing: {Path.GetFileName(file)}");
-                ProcessWavFile(file);
-            }
-        }
-
         private void ProcessWavFile(string filePath)
         {
-            const ushort Pcma = 0x0001;
             using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite))
             using (var br = new BinaryReader(fs, System.Text.Encoding.UTF8, leaveOpen: true))
             using (var bw = new BinaryWriter(fs, System.Text.Encoding.UTF8, leaveOpen: true))
